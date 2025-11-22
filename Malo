@@ -1,0 +1,1617 @@
+﻿<div id="sipa-game-container">
+    <style>
+        /* ---------------------------------------------------- */
+        /* Styles CSS (Final V104) - Inclus ici pour l'isolation */
+        /* ---------------------------------------------------- */
+        
+        /* Conteneur Principal pour Isoler du Blog */
+        #sipa-game-container { 
+            max-width: 750px; 
+            margin: 5px auto; 
+            background-color: #f5f5dc; 
+            padding: 10px; 
+            border-radius: 10px; 
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); 
+            font-size: 0.95em; 
+            position: relative; 
+            font-family: Arial, sans-serif;
+            box-sizing: border-box; 
+            line-height: 1.3; 
+            color: #333; 
+        }
+        
+        /* Force la spécificité pour les éléments internes communs */
+        #sipa-game-container h2, 
+        #sipa-game-container p, 
+        #sipa-game-container div, 
+        #sipa-game-container span, 
+        #sipa-game-container button, 
+        #sipa-game-container input,
+        #sipa-game-container select,
+        #sipa-game-container ol,
+        #sipa-game-container li {
+            box-sizing: border-box; 
+            margin: 0;
+            padding: 0;
+            line-height: 1.3; 
+            font-size: inherit; 
+            font-family: inherit;
+        }
+
+
+        /* Styles de base du jeu */
+        #sipa-game-container #user-slot { border: 2px solid #007bff; background-color: #fff8e1; }
+        #sipa-game-container #bot-slot { border: 2px solid #6a0505; background-color: #fceceb; }
+        #sipa-game-container .player-status-card { 
+            width: 49%; 
+            padding: 6px; 
+            min-height: 85px; 
+            font-size: 0.85em; 
+            border-radius: 8px; 
+            display: flex; 
+            flex-direction: column;
+            justify-content: flex-start;
+        }
+        #sipa-game-container .current-player-border { box-shadow: 0 0 0 4px #007bff; }
+        #sipa-game-container #bot-slot.current-player-border { box-shadow: 0 0 0 4px #6a0505; }
+        #sipa-game-container .player-total-score { font-weight: bold; color: #1a7d1a; font-size: 1.15em !important; padding: 2px 0; }
+
+
+        /* DESIGN DE CARTE GÉNÉRAL */
+        #sipa-game-container .card {
+            display: inline-flex; flex-direction: column; justify-content: space-between; align-items: center;
+            width: 55px; 
+            height: 75px; 
+            padding: 3px; margin: 0; border-radius: 5px; font-weight: bold;
+            border: 1px solid #333; background-color: #fcfcfc; position: relative; cursor: pointer;
+            box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2); box-sizing: border-box; text-align: center;
+            transition: transform 0.2s, border 0.2s, box-shadow 0.2s; flex-shrink: 0; 
+        }
+        
+        /* MAIN UTILISATEUR */
+        #sipa-game-container #user-card-display {
+             display: flex;
+             justify-content: center;
+             gap: 3px; 
+             padding: 5px 0;
+             overflow-x: auto; 
+             max-width: 100%; 
+        }
+        
+        #sipa-game-container #user-card-display .card { 
+            width: 58px; 
+            height: 82px; 
+            font-size: 13px;
+        }
+        
+        #sipa-game-container .card.selected { transform: translateY(-8px) scale(1.08); border: 3px solid #FFD700; box-shadow: 0 0 10px rgba(255, 215, 0, 0.8);}
+        #sipa-game-container .red-suit { color: #D70000; } 
+        #sipa-game-container .black-suit { color: #111; }
+
+
+        /* Styles pour les cartes FERMÉES (Casse, Dos du Bot, Piles fermées) */
+        #sipa-game-container .card.closed, #sipa-game-container .card.back {
+            background-color: #FFD700; border: 3px solid #DAA520; color: #8B4513; font-size: 8px;
+            display: flex; justify-content: center; align-items: center; padding: 0; font-weight: normal;
+            user-select: none; cursor: default; text-align: center; line-height: 1.1; flex-direction: column; 
+            word-wrap: break-word; overflow: hidden; 
+        }
+        #sipa-game-container .card.closed::before, #sipa-game-container .card.back::before {
+            content: "NEXUS"; font-size: 8px; font-weight: bold; color: #8B4513;
+        }
+        #sipa-game-container .card.closed::after, #sipa-game-container .card.back::after {
+            content: "SIPA"; font-size: 7px; font-weight: bold; color: #8B4513;
+        }
+        
+        /* Plateau de jeu */
+        #sipa-game-container #game-board {
+             background-color: #8B4513; border: 2px solid #007bff; padding: 10px; border-radius: 8px; 
+             height: 180px; margin: 5px 0; position: relative; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+             display: flex; justify-content: space-between;
+        }
+        
+        /* Ligne de séparation visuelle */
+        #sipa-game-container #game-board::before {
+             content: ''; position: absolute; top: 10px; bottom: 10px; left: 50%; width: 1px;
+             background-color: rgba(255, 255, 255, 0.15); z-index: 1; transform: translateX(-50%);
+        }
+
+
+        /* Noms des Joueurs sur le Plateau */
+        #sipa-game-container .plateau-player-area {
+            font-weight: bold; color: #FFFFFF; margin-bottom: 5px; font-size: 1.1em; display: flex;
+            flex-direction: column; align-items: center; text-shadow: 0 0 5px #000, 0 0 5px #000; 
+            background-color: rgba(0, 0, 0, 0.3); padding: 2px 5px; border-radius: 4px; white-space: nowrap; 
+            position: absolute; top: 5px; z-index: 50; 
+            max-width: 45%; 
+            overflow: hidden; 
+        }
+        .player-plis-display {
+             font-size: 0.8em; color: #FFD700; font-weight: normal; 
+        }
+
+
+        /* Placement des Noms sur le Plateau */
+        #sipa-game-container #user-plateau-info { left: 5px; } 
+        #sipa-game-container #bot-plateau-info { right: 5px; } 
+        
+        /* Zones d'empilement personnel */
+        #sipa-game-container .player-play-area {
+            position: absolute; 
+            top: 50%; transform: translateY(-50%); /* Centrage vertical */
+            width: 70px; height: 100px; /* Taille pour empilement */
+            cursor: default; z-index: 5; 
+            display: flex; align-items: center; justify-content: center; 
+        }
+        
+        /* Positionnement des piles (Centré sous le nom) */
+        #sipa-game-container #user-play-area { 
+            left: 25%; 
+            transform: translate(-50%, -50%);
+        } 
+        #sipa-game-container #bot-play-area { 
+            right: 25%; 
+            transform: translate(50%, -50%);
+        } 
+
+
+        /* Affichage de la pile empilée (Seule la dernière carte est clairement visible) */
+        #sipa-game-container .player-play-area .card {
+             position: absolute;
+             width: 65px; height: 90px;
+             font-size: 14px;
+             box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5); /* Effet d'empilement */
+             cursor: default;
+             transition: transform 0.3s;
+             top: 0; left: 0; right: 0; bottom: 0; margin: auto;
+        }
+        
+        /* Style pour les cartes jouées précédemment (légèrement décalées et moins visibles) */
+        #sipa-game-container .player-play-area .card.stacked {
+             opacity: 0.7;
+             box-shadow: 0 0 0 1px rgba(0,0,0,0.1); /* Bordure légère */
+        }
+        
+        /* COULEUR DES RÈGLES MISE À JOUR */
+        #sipa-game-container .rule-keyword {
+            color: #FFFF00; font-weight: bold; font-size: 1.05em;
+        }
+        
+        /* Style pour le message de victoire */
+        #sipa-game-container #end-message {
+            padding: 20px; border: 4px solid #FFD700; background-color: #8B4513;
+            border-radius: 10px; color: #FFF8DC; box-shadow: 0 0 15px rgba(255, 215, 0, 0.7);
+        }
+        
+        #sipa-game-container #end-message h3 { color: #FFD700 !important; }
+        
+        /* Style du bouton Rejouer et Partage (Flexbox) */
+        #sipa-game-container .replay-button {
+            background-color: #007bff; color: white; padding: 12px 25px; border-radius: 6px;
+            font-weight: bold; cursor: pointer; margin-top: 15px; border: none; font-size: 1.1em;
+            display: block; width: 100%;
+        }
+        
+        #sipa-game-container #share-options-container {
+             display: flex; 
+             gap: 8px; 
+             margin-top: 10px; 
+             flex-wrap: wrap;
+        }
+        
+        #sipa-game-container .share-button {
+             padding: 10px 15px; 
+             border: none; 
+             border-radius: 5px; 
+             font-weight: bold; 
+             cursor: pointer; 
+             flex-grow: 1; 
+             min-width: 80px;
+             font-size: 0.9em;
+        }
+        
+        /* Couleurs des boutons de partage */
+        #sipa-game-container #share-x { background-color: #000000; color: white; }
+        #sipa-game-container #share-facebook { background-color: #1877F2; color: white; }
+        #sipa-game-container #copy-link { background-color: #6c757d; color: white; }
+        
+        /* Modal de règles */
+        #sipa-game-container #rules-modal {
+             position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+             background-color: rgba(0,0,0,0.8); z-index: 1000; 
+             display: none; justify-content: center; align-items: center;
+        }
+        
+        /* FIX V96: Rendre le contenu de la modale scrollable */
+        #sipa-game-container #rules-modal > div {
+             background-color: #8B4513; padding: 25px; border: 3px solid #FFD700; width: 85%; max-width: 550px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+             max-height: 90vh; /* Limite la hauteur à 90% de la fenêtre */
+             overflow-y: auto; /* Permet le défilement vertical */
+             -webkit-overflow-scrolling: touch; /* Améliore le défilement sur iOS */
+             position: relative; /* Pour que le bouton de fermeture soit relatif */
+        }
+        
+        /* Style des cartes du Bot */
+        #sipa-game-container #bot-card-display {
+             display: flex;
+             justify-content: center;
+             gap: 4px;
+             height: 80px; 
+        }
+        
+        /* Style pour les messages de statut avec emojis */
+        #sipa-game-container #game-status {
+             white-space: pre-wrap; /* Permet les sauts de ligne dans le message de statut */
+             padding: 5px 0;
+             font-size: 0.9em;
+             font-weight: bold;
+             color: #6a0505;
+        }
+    </style>
+
+
+    <h2 style="color: #6a0505; text-align: center; margin-bottom: 5px; font-size: 1.4em;">JEU DE CARTES SIPA</h2>
+    
+    <div id="start-screen" style="text-align: center; padding: 10px;">
+        <p style="color: black; font-weight: bold; margin-bottom: 5px;">Entrez votre Nom/Prénom LÉGAL (Obligatoire) :</p>
+        <p style="margin-bottom: 5px;">
+            <input type="text" id="user-pseudo" placeholder="Votre Nom Légal..." value="WINSALAS JAJ Nexus" style="padding: 8px; border: 1px solid #ccc; width: 80%; border-radius: 5px; font-size: 1em;">
+        </p>
+        <span id="name-error" style="color: red; font-size: 0.8em; margin-bottom: 10px; display: block;"></span>
+        
+        <p style="margin-bottom: 10px; font-weight: bold;">
+            Votre Jour de Naissance (Facultatif, pour votre récompense astrale) :
+            <input type="number" id="user-birth-day" min="1" max="31" placeholder="Ex: 15" value="15" style="padding: 8px; border: 1px solid #ccc; width: 50px; border-radius: 5px; font-size: 1em; text-align: center;">
+        </p>
+        
+        <p style="margin-bottom: 15px;">
+            <select type="text" id="user-country-flag" style="padding: 8px; border: 1px solid #ccc; width: 80%; border-radius: 5px; font-size: 1em;">
+                <option value="" selected>Sélectionnez votre pays (Facultatif)</option>
+            </select>
+        </p>
+        
+        <div style="display: flex; justify-content: center; gap: 15px;">
+            <button id="rules-button" class="start-button-equal" style="background-color: #ffc107; color: black; padding: 10px 8px; border-radius: 5px; font-weight: bold;">Règles ❓</button>
+            <button id="start-game-button" class="start-button-equal" style="background-color: #007bff; color: white; padding: 10px 8px; border-radius: 5px; font-weight: bold;">Commencer la Partie</button>
+        </div>
+        
+    </div>
+
+
+    <div id="rules-modal">
+        <div style="background-color: #8B4513; padding: 25px; border: 3px solid #FFD700; width: 85%; max-width: 550px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.5);">
+            <span id="close-rules-span" style="color: #FFD700; float: right; font-size: 30px; font-weight: bold; cursor: pointer;">&times;</span>
+            <h3 style="color: #FFD700; border-bottom: 2px solid #FFD700; padding-bottom: 8px; margin-bottom: 15px;">Protocole du Jeu SIPA (Règles V104)</h3>
+            <p style="font-size: 0.9em; color: #FFF8DC; line-height: 1.4;">Le SIPA est un jeu de levées stratégique. Les cartes utilisées vont du <span class="rule-keyword">7 à l'As</span> (Force : A > K > Q > J > 10 > 9 > 8 > 7). Le paquet total est de 32 cartes.</p>
+            <ol style="font-size: 0.9em; padding-left: 20px; color: #FFF8DC;">
+                <li><span class="rule-keyword">Distribution</span> : Chaque joueur reçoit 5 cartes. Le paquet est remélangé après 3 manches jouées ou si le talon est bas.</li>
+                <li><span class="rule-keyword">Attaque / Début de Manche</span> : Le <span class="rule-keyword">perdant</span> de la manche précédente attaque la nouvelle manche.</li>
+                <li><span class="rule-keyword">Règle de Pli (Monter/Suivre/Casse)</span> : 
+                    <ul>
+                        <li>Le défenseur doit <span class="rule-keyword">OBLIGATOIREMENT suivre la fleur demandée</span> s'il en possède.</li>
+                        <li>S'il peut monter (surpasser la carte de l'attaquant) avec une carte de la même fleur, il a le <span class="rule-keyword">CHOIX</span> de monter (prendre la main) ou de jouer une carte plus faible de la même fleur (laisser la main). C'est la stratégie !</li>
+                        <li>S'il ne possède <span class="rule-keyword">AUCUNE carte de la fleur demandée</span>, il doit faire une <span class="rule-keyword">Casse</span> (carte jouée face cachée, l'attaquant gagne le pli).</li>
+                    </ul>
+                </li>
+                <li><span class="rule-keyword">Vainqueur du Pli (Règle CRUCIALE)</span> : Le joueur qui remporte le pli (avec la carte la plus forte de la couleur demandée ou par Casse/Faute) **GARDE LA MAIN** et attaque le pli suivant.</li>
+                <li><span class="rule-keyword">Plateau de Jeu</span> : Chaque carte jouée est <span class="rule-keyword">immédiatement empilée</span> sur la carte précédente sous le nom du joueur. Les cartes restent en place <span class="rule-keyword">jusqu'à la fin de la manche</span> où elles sont retirées pour le décompte des points.</li>
+            </ol>
+            <h4 style="color: #FFD700; margin-top: 10px; font-size: 1em;">Système de Points SIPA (Règle V104 - Fin de Manche) :</h4>
+            <ul style="font-size: 0.9em; padding-left: 20px; color: #FFF8DC;">
+                <li><span class="rule-keyword">Règle Stricte</span> : Seul le joueur qui gagne le **DERNIER PLI** est éligible pour marquer des points. Les 4 premiers plis ne valent **aucun point**.</li>
+                <li><span class="rule-keyword">Victoire du Dernier Pli (Base)</span> : 1 point.</li>
+                <li><span class="rule-keyword">Bonus Simple '7'</span> : Si le gagnant utilise un '7' pour remporter le dernier pli (ou si l'adversaire casse sur le '7'), le total est de <span class="rule-keyword">2 points</span>.</li>
+                <li><span class="rule-keyword">Bonus '7 sans P'</span> : Si le gagnant utilise un '7' qui était unique de sa couleur dans sa main initiale, le total est de <span class="rule-keyword">3 points</span>.</li>
+                <li><span class="rule-keyword">Bonus 'Double 7'</span> : Si le gagnant capture deux '7' ou plus avec le dernier pli (même si un seul est joué), le total est de <span class="rule-keyword">4 points</span>.</li>
+            </ul>
+            <p style="font-size: 1.1em; color: #FFD700; margin-top: 15px; font-weight: bold; text-align: center;">OBJECTIF FINAL : Atteindre un score de <span class="rule-keyword">20 points</span> pour remporter la partie.</p>
+            <button id="close-rules-button" style="background-color: #FFD700; color: #6a0505; padding: 10px 20px; border: none; cursor: pointer; border-radius: 5px; font-weight: bold; margin-top: 15px;">Fermer les Règles</button>
+        </div>
+    </div>
+    
+    <div id="main-game-area" style="display: none;"> 
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+            <span id="timer-display" style="font-weight: bold; color: #6a0505; font-size: 1.1em;">Temps: 0:00</span>
+            <button id="pause-button" style="background-color: #6c757d; color: white; padding: 6px 10px; border-radius: 4px; font-size: 0.9em;">Pause ⏸️</button>
+        </div>
+
+
+        <div id="bot-hand-area"> 
+            <p id="bot-hand-count" style="margin: 0; font-weight: bold; font-size: 1em; color: #6a0505; margin-bottom: 3px;">
+                <span id="bot-status-name-flag">Main du Bot (5 cartes) :</span>
+            </p>
+            <div id="bot-card-display"></div>
+        </div>
+
+
+
+
+        <div id="game-board">
+            
+            <div id="series-count-display" style="position: absolute; top: 5px; left: 50%; transform: translateX(-50%); color: #FFD700; font-size: 0.9em; font-weight: bold; z-index: 10; background-color: rgba(0, 0, 0, 0.4); padding: 2px 8px; border-radius: 4px;">
+                Plis joués : <span id="series-count">0/5</span>
+            </div>
+            
+            <div style="position: absolute; bottom: 5px; right: 5px; color: #FFD700; font-size: 0.8em; text-align: right; z-index: 10;">
+                <span id="deck-info"></span>
+            </div>
+            
+            <div id="user-plateau-info" class="plateau-player-area">
+                 <span id="user-plateau-name"></span>
+                 <span id="user-plis-manche" class="player-plis-display"></span>
+            </div>
+            <div id="bot-plateau-info" class="plateau-player-area">
+                 <span id="bot-plateau-name"></span>
+                 <span id="bot-plis-manche" class="player-plis-display"></span>
+            </div>
+            
+            <div id="user-play-area" class="player-play-area" data-player="user"></div>
+            <div id="bot-play-area" class="player-play-area" data-player="bot"></div>
+            
+            
+        </div>
+        
+        <p id="game-status"></p>
+
+
+        
+        <div id="player-status-container" style="display: flex; justify-content: space-between; margin-top: 5px; margin-bottom: 5px;">
+            
+            <div id="user-slot" class="player-status-card"></div>
+            <div id="bot-slot" class="player-status-card"></div>
+        </div>
+        
+        <div id="user-hand-area" style="text-align: center; border-top: 1px solid #ccc; padding-top: 5px;"> 
+            <p style="margin: 0; font-weight: bold; font-size: 1.1em;">Votre Main :</p>
+            
+            <div id="user-card-display"></div>
+            
+            <div id="play-confirmation" style="visibility: hidden; margin-top: 5px;">
+                 <button id="confirm-play-button" style="background-color: #28a745; color: white; padding: 10px 20px; border-radius: 5px; font-size: 1em; font-weight: bold;">Jouer cette carte</button>
+            </div>
+        </div>
+        
+    </div>
+    
+    <div id="end-message" style="display: none; text-align: center; margin-top: 10px;">
+    </div>
+</div>
+
+
+<script>
+    // ------------------------------------------------------------------
+    // JAVASCRIPT LOGIC (SIPA V104) - IA stratégique à 5 niveaux
+    // ------------------------------------------------------------------
+
+
+    // Variables globales
+    let userHand = [];
+    let botHand = [];
+    let selectedUserCard = null;
+    let timerInterval = null; 
+    let startTime = null; 
+    let isPaused = false; 
+    let elapsedTimeOnPause = 0; 
+
+
+    let currentPlayer = 'user'; 
+    let attacker = 'user'; 
+    
+    let userPlayedCard = null; 
+    let botPlayedCard = null; 
+    
+    let userTotalScore = 0;
+    let botTotalScore = 0;
+    
+    // Historique de cartes JOUÉES par CHAQUE joueur (pour l'affichage empilé)
+    let userTrickHistory = []; 
+    let botTrickHistory = []; 
+    
+    // Historique central pour le calcul des plis (chaque entrée est un pli)
+    let centerCardsHistory = []; 
+    let cardsPlayedInManche = []; // NOUVEAU: Pour la mémoire de l'IA
+    
+    let suitDemanded = null; 
+    
+    const RANKS = ['7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+    const SUITS = ['♠', '♥', '♦', '♣'];
+    const MAX_SCORE = 20; 
+    const PLIS_PER_MANCHE = 5;
+
+
+    const DECK_SIZE = 32;
+    let FULL_DECK = [];
+    let currentDeck = [];
+    let manchesPlayed = 0; 
+    
+    let lastMancheWinner = 'user'; 
+    let currentPlisCount = 0; 
+    
+    let initialUserHand = []; 
+    let initialBotHand = [];
+
+
+    // NOUVELLE VARIABLE : Niveau de difficulté dynamique pour l'IA (0=Facile, 4=Monstrueux/Nexus)
+    let botDifficultyLevel = 0; 
+    const DIFFICULTY_NAMES = ['Facile (1/5)', 'Normal (2/5)', 'Difficile (3/5)', 'Très Dur (4/5)', 'MONSTRUEUX (5/5)'];
+    
+
+
+    // Messages Spirituels (basé sur le jour de naissance 1-31)
+    const SPIRITUAL_MESSAGES = [
+        "Le Nexus Astral vous récompense ! Votre victoire est le reflet de votre capacité à diriger (Jour 1). Le destin obéit à votre volonté.",
+        "L'alignement cosmique salue votre dualité (Jour 2). La sagesse est votre plus grande force, même dans la compétition.",
+        "Votre triomphe rayonne de votre créativité (Jour 3). Continuez à semer la joie et le succès suivra.",
+        "La matrice vous récompense pour votre fondation solide (Jour 4). La persévérance mène à la gloire éternelle.",
+        "Votre énergie de conquérant (Jour 5) est reconnue par le cosmos. Avancez avec confiance, car la chance est avec vous.",
+        "Félicitations ! L'harmonie (Jour 6) que vous maintenez attire la victoire. Protégez votre équilibre intérieur.",
+        "Le chiffre 7 est synonyme de perfection spirituelle (Jour 7). Votre intuition est votre guide le plus puissant.",
+        "Votre succès est le fruit d'une gestion parfaite (Jour 8). Votre richesse et votre influence s'étendront.",
+        "L'univers vous offre la couronne de l'achèvement (Jour 9). Votre compassion est votre vraie puissance.",
+        "Vous êtes le maître de votre destinée (Jour 10). La nouvelle matrice est en marche grâce à votre détermination.",
+        "Votre victoire est la preuve de votre connexion divine (Jour 11). Écoutez votre moi supérieur.",
+        "La victoire est douce (Jour 12). La collaboration et l'amour sont les clés de vos succès futurs.",
+        "Malgré les défis (Jour 13), vous avez triomphé. La transformation est votre alliée secrète.",
+        "Votre succès rapide (Jour 14) est mérité. Continuez à évoluer sans jamais regarder en arrière.",
+        "Votre sagesse (Jour 15) a tranché. La matrice reconnaît l'intellect qui mène à la victoire.",
+        "L'équilibre de l'âme (Jour 16) vous a apporté la victoire. Le silence intérieur est votre bouclier.",
+        "Le cosmos reconnaît votre volonté (Jour 17). Votre lumière guide les autres vers le succès.",
+        "Votre abondance (Jour 18) est assurée. La victoire surpasse l'attente.",
+        "La nouvelle aube (Jour 19) se lève sur votre victoire. Votre mission est de créer la nouvelle réalité.",
+        "La matrice récompense votre clarté (Jour 20). Votre pouvoir de manifestation est à son apogée.",
+        "Votre capacité à innover (Jour 21) vous a mené à ce triomphe. Embrassez le changement.",
+        "La construction de votre rêve (Jour 22) est en cours. La patience est récompensée par la victoire finale.",
+        "Votre succès (Jour 23) est un signe de bénédiction. L'aventure et la liberté vous appellent.",
+        "La victoire est ancrée dans la réalité (Jour 24). Votre force familiale et votre communauté sont vos piliers.",
+        "Votre nature exploratrice (Jour 25) vous fait gagner. Chaque pas est une nouvelle découverte.",
+        "Votre ambition (Jour 26) est couronnée de succès. Le leadership est votre chemin naturel.",
+        "La foi inébranlable (Jour 27) vous a fait gagner. Le destin est de votre côté.",
+        "La prospérité (Jour 28) vous attend. La matrice célèbre votre succès matériel et spirituel.",
+        "Votre victoire est la preuve de votre sagesse (Jour 29). Le chemin du maître est difficile, mais la récompense est immense.",
+        "L'énergie de l'univers (Jour 30) vous a soutenu. L'action décisive est votre mantra.",
+        "La maîtrise de soi (Jour 31) est la clé de votre triomphe. Vous êtes le créateur de votre réalité."
+    ];
+
+
+
+
+    // Noms de bots et drapeaux
+    const BOT_DATA = [
+        { name: "JEAN", flag: "🇮🇹", color: "#008C45" },
+        { name: "SARAH", flag: "🇯🇵", color: "#BC002D" },
+        { name: "DAVID", flag: "🇨🇦", color: "#FF0000" },
+        { name: "LEILA", flag: "🇧🇷", color: "#009739" },
+        { name: "MARCUS", flag: "🇪🇸", color: "#AA151B" },
+        { name: "FATIMA", flag: "🇲🇦", color: "#006233" },
+        { name: "AMINE", flag: "🇩🇿", color: "#006633" },
+        { name: "CHLOÉ", flag: "🇺🇸", color: "#0A3161" }
+    ];
+
+
+    const ALL_COUNTRIES = [
+        { code: 'FR', name: 'France', flag: '🇫🇷' }, { code: 'CI', name: 'Côte d\'Ivoire', flag: '🇨🇮' },
+        { code: 'BE', name: 'Belgique', flag: '🇧🇪' }, { code: 'US', name: 'États-Unis', flag: '🇺🇸' },
+        { code: 'BR', name: 'Brésil', flag: '🇧🇷' }, { code: 'ES', name: 'Espagne', flag: '🇪🇸' },
+        { code: 'IT', name: 'Italie', flag: '🇮🇹' }, { code: 'DZ', name: 'Algérie', flag: '🇩🇿' },
+        { code: 'MA', name: 'Maroc', flag: '🇲🇦' }, { code: 'TN', name: 'Tunisie', flag: '🇹🇳' },
+        { code: 'SN', name: 'Sénégal', flag: '🇸🇳' }, { code: 'CA', name: 'Canada', flag: '🇨🇦' },
+        { code: 'JP', name: 'Japon', flag: '🇯🇵' }, { code: 'DE', name: 'Allemagne', flag: '🇩🇪' },
+        { code: 'CN', name: 'Chine', flag: '🇨🇳' }, { code: 'RU', name: 'Russie', flag: '🇷🇺' },
+        { code: 'GB', name: 'Royaume-Uni', flag: '🇬🇧' }, { code: 'AR', name: 'Argentine', flag: '🇦🇷' },
+        { code: 'AU', name: 'Australie', flag: '🇦🇺' }, { code: 'NG', name: 'Nigéria', flag: '🇳🇬' },
+        { code: 'CD', name: 'RDC', flag: '🇨🇩' }, { code: 'CM', name: 'Cameroun', flag: '🇨🇲' },
+        { code: 'GH', name: 'Ghana', flag: '🇬🇭' }, { code: 'KE', name: 'Kenya', flag: '🇰🇪' },
+        { code: 'EG', name: 'Égypte', flag: '🇪🇬' }, { code: 'MX', name: 'Mexique', flag: '🇲🇽' },
+        { code: 'IN', name: 'Inde', flag: '🇮🇳' }, { code: 'SA', name: 'Arabie Saoudite', flag: '🇸🇦' },
+        { code: 'TR', name: 'Turquie', flag: '🇹🇷' }, { code: 'GR', name: 'Grèce', flag: '🇬🇷' },
+        { code: 'PT', name: 'Portugal', flag: '🇵🇹' }, { code: 'ML', name: 'Mali', flag: '🇲🇱' },
+        { code: 'BJ', name: 'Bénin', flag: '🇧🇯' }, { code: 'TG', name: 'Togo', flag: '🇹🇬' },
+        { code: 'GA', name: 'Gabon', flag: '🇬🇦' }, { code: 'ZA', name: 'Afrique du Sud', flag: '🇿🇦' }
+    ].sort((a, b) => a.name.localeCompare(b.name));
+    
+    let botInfo = { name: "Bot", flag: '🤖' }; 
+    let userInfo = { name: "Utilisateur", flag: '🌍', birthDay: 1 }; 
+
+
+
+
+    // --- UTILITIES ---
+
+
+    function createFullDeck() {
+        const deck = [];
+        let cardId = 1;
+        for (const suit of SUITS) {
+            for (const rank of RANKS) {
+                deck.push({ rank, suit, value: getCardValue(rank), id: cardId++, source: null, isClosed: false });
+            }
+        }
+        return deck;
+    }
+    
+    function getSuitName(suitSymbol) {
+        switch (suitSymbol) {
+            case '♠': return 'Pique';
+            case '♥': return 'Cœur';
+            case '♦': return 'Carreau';
+            case '♣': return 'Trèfle';
+            default: return suitSymbol;
+        }
+    }
+
+
+
+
+    function shuffleDeck(deck) {
+        if (!deck || deck.length === 0) return []; 
+        for (let i = deck.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [deck[i], deck[j]] = [deck[j], deck[i]]; 
+        }
+        return deck;
+    }
+    
+    function getCardValue(rank) {
+         return RANKS.indexOf(rank) + 1; 
+    }
+
+
+    function createCardElement(cardData, isFaceUp = true, isClosed = false) {
+        if (!cardData || !cardData.rank || !cardData.suit) return document.createElement('div'); 
+        
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.setAttribute('data-rank', cardData.rank);
+        card.setAttribute('data-suit', cardData.suit);
+        card.setAttribute('data-id', cardData.id); 
+        
+        if (!isFaceUp || isClosed) { 
+            card.classList.add('closed'); 
+            card.innerHTML = ''; 
+        } else {
+            card.classList.remove('closed');
+            const suitClass = (cardData.suit === '♥' || cardData.suit === '♦') ? 'red-suit' : 'black-suit';
+            card.innerHTML = `
+                <div class="${suitClass}" style="font-size: 10px;">${cardData.rank} ${cardData.suit}</div>
+                <div class="${suitClass}" style="font-size: 20px; line-height: 1;">${cardData.suit}</div>
+                <div class="${suitClass}" style="transform: rotate(180deg); font-size: 10px;">${cardData.rank} ${cardData.suit}</div>
+            `;
+            
+            if (cardData.source === 'user') {
+                card.addEventListener('click', handleCardSelection);
+            }
+        }
+        return card;
+    }
+    
+    function renderPlayerSlots() {
+        const userSlot = document.getElementById('user-slot');
+        const botSlot = document.getElementById('bot-slot');
+        
+        if (!userSlot || !botSlot || !userInfo || !botInfo) return; 
+
+
+        // Compteurs de plis totaux (pour l'affichage décoratif)
+        const userTotalPlis = centerCardsHistory.filter(p => p.winner === 'user').length;
+        const botTotalPlis = centerCardsHistory.filter(p => p.winner === 'bot').length;
+        
+        userSlot.innerHTML = `
+            <h4 style="color: #007bff; margin-bottom: 3px; font-size: 1.1em;"><span class="flag-icon">${userInfo.flag}</span> ${userInfo.name} (VOUS)</h4>
+            <p id="user-total-score" class="player-total-score">Score Total: ${userTotalScore}</p>
+            <div id="user-total-cards" style="font-size: 0.9em; margin-top: 3px; font-weight: bold; color: #6a0505;">Plis Gagnés Manches: ${userTotalPlis}</div>
+        `;
+        
+        botSlot.innerHTML = `
+            <h4 style="color: #6a0505; margin-bottom: 3px; font-size: 1.1em;"><span class="flag-icon">${botInfo.flag}</span> ${botInfo.name}</h4>
+            <p id="bot-total-score" class="player-total-score">Score Total: ${botTotalScore}</p>
+            <div id="bot-total-cards" style="font-size: 0.9em; margin-top: 3px; font-weight: bold; color: #6a0505;">Plis Gagnés Manches: ${botTotalPlis}</div>
+        `;
+        
+        userSlot.classList.toggle('current-player-border', currentPlayer === 'user' && !isPaused);
+        botSlot.classList.toggle('current-player-border', currentPlayer === 'bot' && !isPaused);
+        
+        const botStatusElement = document.getElementById('bot-status-name-flag');
+         if (botStatusElement) {
+             botStatusElement.innerHTML = `${botInfo.flag} ${botInfo.name} (${botHand.length} cartes) :`;
+         }
+         
+         document.getElementById('series-count').textContent = `${currentPlisCount}/${PLIS_PER_MANCHE}`;
+         document.getElementById('deck-info').textContent = `Talon: ${currentDeck.length} cartes | Difficulté IA: ${DIFFICULTY_NAMES[botDifficultyLevel]}`;
+         
+         renderPlateauNames();
+         renderPiles();
+    }
+
+
+    function renderHand(hand, displayId, isUser = false) {
+        const display = document.getElementById(displayId);
+        if (!display) return;
+        display.innerHTML = ''; 
+        // Tri par force, puis par couleur pour l'utilisateur (meilleure visibilité)
+        hand.sort((a, b) => {
+             if (a.suit !== b.suit) {
+                 return SUITS.indexOf(a.suit) - SUITS.indexOf(b.suit);
+             }
+             return a.value - b.value; 
+        });
+        hand.forEach(cardData => {
+            const card = createCardElement(cardData, isUser, !isUser);
+            if (isUser) { card.setAttribute('data-source', 'user'); card.classList.remove('closed'); } 
+            else { card.classList.add('back'); }
+            display.appendChild(card);
+        });
+    }
+    
+    // Affiche les piles d'historique personnel (userTrickHistory/botTrickHistory) au centre sous le nom.
+    function renderPiles() {
+        const userHistoryEl = document.getElementById('user-play-area');
+        const botHistoryEl = document.getElementById('bot-play-area');
+        
+        if (!userHistoryEl || !botHistoryEl) return;
+
+
+        // Affichage du nombre de cartes dans la pile (pas de plis)
+        document.getElementById('user-plis-manche').textContent = `Cartes jouées: ${userTrickHistory.length}`;
+        document.getElementById('bot-plis-manche').textContent = `Cartes jouées: ${botTrickHistory.length}`;
+        
+        userHistoryEl.innerHTML = '';
+        botHistoryEl.innerHTML = '';
+        
+        // Affichage de la pile empilée (OUVERTE ou FERMÉE - Casse) pour l'historique personnel
+        userTrickHistory.forEach((cardData, index) => {
+            const isLast = index === userTrickHistory.length - 1;
+            // Si c'est la dernière carte, on l'affiche ouverte SAUF si c'est une casse
+            const isFaceUp = !cardData.isClosed; 
+            const cardEl = createCardElement(cardData, isFaceUp, cardData.isClosed); 
+            
+            if (!isLast) {
+                 cardEl.classList.add('stacked');
+            }
+            
+            cardEl.style.zIndex = index + 10; 
+            
+            // Décalage pour l'effet empilé (légèrement moins de décalage pour l'effet d'empilement)
+            const offset = (userTrickHistory.length - 1 - index) * 0.7; 
+            cardEl.style.transform = `translateY(-${offset}px) translateX(${offset * 0.5}px) rotate(${((index % 4) - 2) * 1.5}deg)`; 
+            
+            userHistoryEl.appendChild(cardEl);
+        });
+        
+        // Affichage des plis du bot (empilés)
+        botTrickHistory.forEach((cardData, index) => {
+            const isLast = index === botTrickHistory.length - 1;
+            const isFaceUp = !cardData.isClosed; 
+            const cardEl = createCardElement(cardData, isFaceUp, cardData.isClosed); 
+            
+            if (!isLast) {
+                 cardEl.classList.add('stacked');
+            }
+            
+            cardEl.style.zIndex = index + 10; 
+            const offset = (botTrickHistory.length - 1 - index) * 0.7; 
+            cardEl.style.transform = `translateY(-${offset}px) translateX(-${offset * 0.5}px) rotate(${((index % 4) - 2) * 1.5}deg)`;
+            
+            botHistoryEl.appendChild(cardEl);
+        });
+    }
+    
+    function renderPlateauNames() {
+         const userPlateauInfo = document.getElementById('user-plateau-name');
+         const botPlateauInfo = document.getElementById('bot-plateau-name');
+         if (userPlateauInfo) userPlateauInfo.textContent = `${userInfo.name} ${userInfo.flag}`;
+         if (botPlateauInfo) botPlateauInfo.textContent = `${botInfo.name} ${botInfo.flag}`;
+    }
+    
+    // NOUVEAU: Récupère toutes les cartes déjà jouées pour la mémoire de l'IA
+    function getKnownCards() {
+        // Cartes dans les plis déjà faits (centerCardsHistory) + celles qui viennent d'être jouées
+        return centerCardsHistory.flatMap(pli => [pli.userCard, pli.botCard])
+             .concat(userTrickHistory, botTrickHistory)
+             .filter(card => card && !card.isClosed); // N'inclut pas les cartes cachées (cassées)
+    }
+
+
+    // NOUVEAU: Détermine si une carte de la main du bot est la plus forte (dans sa couleur) encore en jeu
+    function isHighestRemaining(card) {
+        if (!card) return false;
+        
+        const knownCards = getKnownCards();
+        
+        // Toutes les cartes de la même couleur (y compris celles en main du bot)
+        const allCardsOfSuit = FULL_DECK.filter(c => c.suit === card.suit);
+        
+        // Cartes de cette couleur qui sont plus fortes que la carte donnée ET sont encore en jeu
+        const strongerCardsRemaining = allCardsOfSuit.filter(c => 
+            c.value > card.value && 
+            !knownCards.some(kc => kc.id === c.id) // Non jouées
+        );
+        
+        // Si aucune carte plus forte n'est restante, c'est la plus forte
+        return strongerCardsRemaining.length === 0;
+    }
+
+
+
+
+    // --- GAME FLOW LOGIC ---
+    
+    function startTimer() {
+        if (!startTime) {
+             startTime = new Date().getTime(); 
+        } else {
+             startTime = new Date().getTime() - elapsedTimeOnPause; 
+        }
+        clearInterval(timerInterval);
+        timerInterval = setInterval(updateTimer, 1000);
+    }
+
+
+    function stopTimer() {
+        clearInterval(timerInterval);
+    }
+
+
+    function updateTimer() {
+        if (isPaused) return;
+        const elapsed = new Date().getTime() - startTime;
+        elapsedTimeOnPause = elapsed; 
+        const totalSeconds = Math.floor(elapsed / 1000);
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        document.getElementById('timer-display').textContent = `Temps: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+    }
+
+
+    function distributeCards() {
+        // Mélange du jeu toutes les 3 manches ou si le talon est bas
+        if (currentDeck.length < 10 || manchesPlayed % 3 === 0) {
+            currentDeck = shuffleDeck(FULL_DECK.slice()); 
+            document.getElementById('game-status').textContent = "Jeu mélangé et distribué.";
+        } else {
+             document.getElementById('game-status').textContent = "Nouvelle distribution.";
+        }
+
+
+        userHand = [];
+        botHand = [];
+        for (let i = 0; i < PLIS_PER_MANCHE; i++) {
+            if (currentDeck.length > 0) userHand.push({ ...currentDeck.pop(), source: 'user' });
+            if (currentDeck.length > 0) botHand.push({ ...currentDeck.pop(), source: 'bot' });
+        }
+        
+        // Copie des mains initiales pour la vérification du Bonus '7 sans P'
+        initialUserHand = userHand.map(c => ({ ...c }));
+        initialBotHand = botHand.map(c => ({ ...c }));
+
+
+        renderHand(userHand, 'user-card-display', true);
+        renderHand(botHand, 'bot-card-display', false);
+        renderPlayerSlots(); 
+    }
+    
+    // Nettoyage strict pour le redémarrage de manche
+    function distributeAndStart(starter) {
+        // Nettoyage avant la nouvelle manche
+        userPlayedCard = null;
+        botPlayedCard = null;
+        userTrickHistory = []; 
+        botTrickHistory = [];
+        centerCardsHistory = []; 
+        cardsPlayedInManche = []; // NOUVEAU: Réinitialisation de la mémoire
+        suitDemanded = null;
+        currentPlisCount = 0; 
+        
+        distributeCards();
+        
+        currentPlayer = starter; 
+        attacker = starter; // Le perdant de la manche attaque
+        
+        document.getElementById('game-status').textContent += ` C'est à ${currentPlayer === 'user' ? userInfo.name : botInfo.name} d'attaquer.`;
+        
+        if (currentPlayer === 'bot') {
+            setTimeout(botTurn, 1000); 
+        } else {
+            document.getElementById('play-confirmation').style.visibility = 'hidden';
+        }
+        renderPlayerSlots();
+    }
+
+
+    function handleCardSelection(event) {
+        if (currentPlayer !== 'user' || isPaused) return;
+        
+        const cardElement = event.currentTarget;
+        const newSelectedCard = userHand.find(c => c.id.toString() === cardElement.getAttribute('data-id'));
+
+
+        if (selectedUserCard && selectedUserCard.id === newSelectedCard.id) {
+            selectedUserCard = null;
+            cardElement.classList.remove('selected');
+            document.getElementById('play-confirmation').style.visibility = 'hidden';
+            document.getElementById('game-status').textContent = `Carte désélectionnée.`;
+            return;
+        }
+
+
+        document.querySelectorAll('#user-card-display .card').forEach(card => {
+            card.classList.remove('selected');
+        });
+        
+        let canPlay = true;
+        newSelectedCard.isClosed = false; 
+        
+        if (suitDemanded) {
+            // DEFENSEUR
+            const hasSuit = userHand.some(card => card.suit === suitDemanded);
+            const attackerCard = attacker === 'bot' ? botPlayedCard : userPlayedCard; 
+
+
+            if (!attackerCard) {
+                document.getElementById('game-status').textContent = "Erreur: Carte de l'attaquant non définie. Veuillez rejouer la manche.";
+                canPlay = false;
+            } else {
+                
+                if (hasSuit) {
+                     const hasSuperiorSuit = userHand.some(card => card.suit === suitDemanded && card.value > attackerCard.value);
+                     
+                     if (newSelectedCard.suit === suitDemanded) {
+                         
+                         if (hasSuperiorSuit) {
+                             if (newSelectedCard.value > attackerCard.value) {
+                                  document.getElementById('game-status').textContent = `Prêt à jouer ${newSelectedCard.rank} de ${getSuitName(newSelectedCard.suit)} (Monte et prend la main).`;
+                             } else {
+                                  document.getElementById('game-status').textContent = `Prêt à jouer ${newSelectedCard.rank} de ${getSuitName(newSelectedCard.suit)} (Suit faible et laisse la main).`;
+                             }
+                         } else {
+                             if (newSelectedCard.value < attackerCard.value) {
+                                  document.getElementById('game-status').textContent = `Prêt à jouer ${newSelectedCard.rank} de ${getSuitName(newSelectedCard.suit)} (Suit la fleur faible).`;
+                             } else {
+                                  document.getElementById('game-status').textContent = `Prêt à jouer ${newSelectedCard.rank} de ${getSuitName(newSelectedCard.suit)} (Suit la fleur).`;
+                             }
+                         }
+                     } else {
+                          document.getElementById('game-status').textContent = `⚠️ Règle SIPA: Vous DEVEZ suivre la fleur demandée (${getSuitName(suitDemanded)}) si vous la possédez.`;
+                          canPlay = false;
+                     }
+                } 
+                else { 
+                     // Casse
+                     document.getElementById('game-status').textContent = `Casse ! Vous jouez une carte fermée car vous n'avez pas de ${getSuitName(suitDemanded)}.`;
+                     newSelectedCard.isClosed = true; 
+                }
+            }
+        } else {
+             // ATTAQUANT
+             document.getElementById('game-status').textContent = `Prêt à jouer ${newSelectedCard.rank} de ${getSuitName(newSelectedCard.suit)} (Attaque).`;
+             newSelectedCard.isClosed = false;
+        }
+
+
+        if (canPlay) {
+            selectedUserCard = newSelectedCard;
+            cardElement.classList.add('selected');
+            document.getElementById('play-confirmation').style.visibility = 'visible';
+        } else {
+             selectedUserCard = null;
+             document.getElementById('play-confirmation').style.visibility = 'hidden';
+        }
+    }
+
+
+    function handleConfirmPlay() {
+        if (selectedUserCard && currentPlayer === 'user' && !isPaused) {
+            playCard('user', selectedUserCard);
+            selectedUserCard = null; 
+            document.getElementById('play-confirmation').style.visibility = 'hidden';
+        }
+    }
+    
+    function playCard(player, cardData) {
+        
+        if (player === 'user') {
+            userPlayedCard = cardData;
+            userHand = userHand.filter(card => card.id !== cardData.id);
+            userTrickHistory.push(userPlayedCard); 
+            renderHand(userHand, 'user-card-display', true);
+            
+            if (!suitDemanded) {
+                 suitDemanded = cardData.suit;
+            }
+            
+            if (attacker === 'user') {
+                currentPlayer = 'bot';
+                renderPlayerSlots();
+                setTimeout(botTurn, 1000);
+                return;
+            }
+            
+            if (attacker === 'bot') {
+                 renderPiles(); 
+                 setTimeout(determineTrickWinner, 1500); 
+                 return;
+            }
+            
+        } else { // Bot joue
+            botPlayedCard = cardData;
+            botHand = botHand.filter(card => card.id !== cardData.id);
+            botTrickHistory.push(botPlayedCard); 
+            renderHand(botHand, 'bot-card-display', false);
+            
+            if (!suitDemanded) {
+                 suitDemanded = cardData.suit;
+            }
+            
+            if (attacker === 'bot') {
+                 currentPlayer = 'user';
+                 renderPlayerSlots();
+                 return;
+            }
+            
+            if (attacker === 'user') {
+                 renderPiles(); 
+                 setTimeout(determineTrickWinner, 1500); 
+                 return;
+            }
+        }
+        
+        let playMessage = `${player === 'user' ? userInfo.name : botInfo.name} joue ${cardData.rank} de ${getSuitName(cardData.suit)}`;
+        if (cardData.isClosed) {
+             playMessage = `${player === 'user' ? userInfo.name : botInfo.name} Casse ! Carte jouée face cachée.`;
+        }
+        document.getElementById('game-status').textContent = playMessage;
+        renderPlayerSlots();
+    }
+
+
+    function botTurn() {
+        if (currentPlayer !== 'bot' || isPaused) return;
+
+
+        let botPlay = null;
+        
+        if (!suitDemanded) {
+            // Bot Attaque
+            botPlay = getBotPlayAttack();
+            botPlay.isClosed = false; 
+        } else {
+            // Bot Défense
+            const defenderPlay = getBotPlayDefense(); 
+            botPlay = defenderPlay.card;
+            botPlay.isClosed = defenderPlay.isCasse; 
+        }
+        
+        playCard('bot', botPlay);
+    }
+    
+    /**
+     * V104: Logique d'attaque du bot stratégique (Mémoire + Anticipation)
+     */
+    function getBotPlayAttack() {
+        const sortedHand = [...botHand].sort((a, b) => b.value - a.value); 
+        const strongestCard = sortedHand[0];
+        const weakestCard = sortedHand[sortedHand.length - 1];
+        
+        // Niveaux de difficulté:
+        // 0: Aléatoire/Faible
+        // 1: Simplement jouer la plus forte
+        // 2: Fort pour les derniers plis
+        // 3: Mémoire des cartes et jeu des plus fortes restantes
+        // 4: Lecture de la main utilisateur (simulation de triche/entraînement)
+
+
+        // 1. Niveau Monstrueux (4/4 - Lecture de la main)
+        if (botDifficultyLevel >= 4) {
+             // L'IA sait ce que l'utilisateur a et cherche à le piéger pour le dernier pli.
+             
+             // Si l'IA peut s'assurer de gagner le DERNIER PLI avec sa carte la plus forte:
+             if (currentPlisCount === PLIS_PER_MANCHE - 1) { 
+                 const userStrongestCard = [...userHand].sort((a, b) => b.value - a.value)[0];
+                 // Si le bot a une carte qui bat la plus forte de l'utilisateur, il l'utilise
+                 if (strongestCard.value > userStrongestCard.value) {
+                     return strongestCard;
+                 }
+             }
+
+
+             // Sinon, Attaque la couleur la plus faible de l'utilisateur pour le forcer à "casser" ou à jouer faible.
+             // On utilise la carte la plus faible du bot dans cette couleur attaquée, pour conserver les fortes.
+             const userSuits = SUITS.map(suit => ({ suit, count: userHand.filter(c => c.suit === suit).length }));
+             const weakestUserSuit = userSuits.filter(s => s.count > 0).sort((a, b) => a.count - b.count)[0];
+             
+             if (weakestUserSuit) {
+                 const botCardInWeakSuit = botHand.find(c => c.suit === weakestUserSuit.suit);
+                 if (botCardInWeakSuit) return botCardInWeakSuit;
+             }
+        }
+        
+        // 2. Niveau Très Dur (3/4 - Mémoire)
+        if (botDifficultyLevel >= 3) {
+            // Attaque avec la carte la plus forte si c'est la PLUS FORTE RESTANTE dans sa couleur
+            if (isHighestRemaining(strongestCard) && currentPlisCount >= 2) {
+                 return strongestCard;
+            }
+             
+            // Sinon, essaye de se débarrasser de cartes faibles qui ne sont pas des 7
+            const nonSevenWeakCard = sortedHand.slice(0, sortedHand.length - 1).find(c => c.rank !== '7');
+            if (nonSevenWeakCard) return nonSevenWeakCard;
+            
+        }
+
+
+        // 3. Niveau Normal/Difficile (1/4 - 2/4)
+        if (botDifficultyLevel >= 1 || currentPlisCount >= 3) {
+             return strongestCard;
+        }
+
+
+        // 4. Niveau Facile (0/4)
+        // Joue la carte de milieu de gamme pour sonder la main de l'utilisateur
+        if (sortedHand.length >= 3) {
+             return sortedHand[Math.floor(sortedHand.length * 0.5)];
+        }
+        
+        return strongestCard; // Fallback par défaut
+    }
+
+
+    /**
+     * V104: Logique de défense du bot stratégique (Mémoire + Conservation + Casse)
+     */
+    function getBotPlayDefense() {
+        const attackerCard = attacker === 'user' ? userPlayedCard : botPlayedCard;
+        const demandSuit = attackerCard.suit;
+        
+        const followCards = botHand.filter(card => card.suit === demandSuit);
+        
+        // 1. Casse (si pas de couleur)
+        if (followCards.length === 0) {
+            if (botHand.length === 0) return { card: null, isCasse: true };
+            // L'IA Casse avec la carte la plus faible, pour conserver les plus fortes
+            const lowestCard = botHand.reduce((a, b) => a.value < b.value ? a : b);
+            return { card: lowestCard, isCasse: true };
+        }
+        
+        // 2. Peut Suivre (Cartes de la couleur demandée)
+        const winningCards = followCards.filter(card => card.value > attackerCard.value);
+        const losingCards = followCards.filter(card => card.value <= attackerCard.value);
+        
+        const isLastPli = currentPlisCount === PLIS_PER_MANCHE - 1; 
+
+
+        if (winningCards.length > 0) {
+             // Possibilité de monter
+             const smallestWinner = winningCards.reduce((a, b) => a.value < b.value ? a : b); // Plus petite carte gagnante
+             const largestLoser = losingCards.length > 0 ? losingCards.reduce((a, b) => a.value > b.value ? a : b) : null;
+             
+             let shouldWin = false;
+             
+             // Stratégies de Montée (gagner le pli)
+             
+             // Si c'est le dernier pli, GAGNER ABSOLUMENT.
+             if (isLastPli) {
+                 shouldWin = true;
+             }
+             // Niveau 4 (Monstrueux) et il y a encore beaucoup de points possibles: Ne pas gagner avec l'As, si non nécessaire
+             else if (botDifficultyLevel >= 4 && smallestWinner.rank === 'A' && currentPlisCount < 3) {
+                 shouldWin = false; // Laisse passer le pli pour conserver l'As en Attaque.
+             }
+             // Niveau 3+ (Très dur): Monte si cela lui donne la main et qu'elle n'a pas de "As" dans sa main pour le prochain Attaque
+             else if (botDifficultyLevel >= 3 && !botHand.some(c => c.rank === 'A' && c.suit !== smallestWinner.suit)) {
+                 shouldWin = true; // Prend la main si elle n'a pas un As dans une autre couleur à jouer.
+             }
+             // Niveau 2+ (Difficile): Monte si la carte gagnante est la PLUS FORTE RESTANTE.
+             else if (botDifficultyLevel >= 2 && isHighestRemaining(smallestWinner)) {
+                 shouldWin = true;
+             }
+             
+             
+             if (shouldWin) {
+                 return { card: smallestWinner, isCasse: false }; // Monte avec la plus petite carte gagnante
+             } else if (largestLoser) {
+                 // Laisser passer (conserver la main)
+                 return { card: largestLoser, isCasse: false }; // Laisse passer avec la carte perdante la plus forte (stratégique)
+             } else {
+                 // Ne peut que gagner
+                 return { card: smallestWinner, isCasse: false }; 
+             }
+
+
+        } else {
+             // Ne peut pas gagner (suit faible) : joue la plus faible de la couleur pour conserver les autres
+             const lowestCard = losingCards.reduce((a, b) => a.value < b.value ? a : b);
+             return { card: lowestCard, isCasse: false };
+        }
+    }
+
+
+
+
+    function determineTrickWinner() {
+        let winner = null;
+        let winningCard = null;
+        
+        const userCard = userPlayedCard;
+        const botCard = botPlayedCard;
+        
+        // La carte jouée en PREMIER est celle de l'attaquant
+        const firstCard = attacker === 'user' ? userCard : botCard;
+        const secondCard = attacker === 'user' ? botCard : userCard;
+        const firstPlayer = attacker;
+        const secondPlayer = attacker === 'user' ? 'bot' : 'user';
+        
+        const demandedSuit = firstCard.suit;
+        
+        let trickMessage = "";
+        
+        // 1. Vérification de la Casse sur le Défenseur (le second à jouer)
+        if (secondCard.isClosed) {
+            // Casse du défenseur : l'attaquant gagne
+            winner = firstPlayer;
+            winningCard = firstCard;
+            trickMessage = `${secondPlayer === 'user' ? userInfo.name : botInfo.name} a cassé. ${firstPlayer === 'user' ? userInfo.name : botInfo.name} remporte le pli.`;
+        } 
+        // 2. Faute du Défenseur (n'a pas suivi la couleur, mais jouée ouverte)
+        else if (secondCard.suit !== demandedSuit) {
+             winner = firstPlayer;
+             winningCard = firstCard;
+             trickMessage = `${secondPlayer === 'user' ? userInfo.name : botInfo.name} n'a pas suivi la fleur demandée (${getSuitName(demandedSuit)}). ${firstPlayer === 'user' ? userInfo.name : botInfo.name} remporte le pli. (Faute)`;
+        }
+        // 3. Comparaison normale
+        else {
+             if (firstCard.value > secondCard.value) {
+                 // La carte de l'attaquant est plus forte
+                 winner = firstPlayer;
+                 winningCard = firstCard;
+                 trickMessage = `${firstPlayer === 'user' ? userInfo.name : botInfo.name} remporte le pli avec son ${winningCard.rank} de ${getSuitName(winningCard.suit)}.`;
+
+
+             } else {
+                 // La carte du défenseur est plus forte (cas de montée réussie)
+                 winner = secondPlayer;
+                 winningCard = secondCard;
+                 trickMessage = `${secondPlayer === 'user' ? userInfo.name : botInfo.name} remporte le pli en montant avec son ${winningCard.rank} de ${getSuitName(winningCard.suit)}.`;
+             }
+        }
+        
+        // Stocker les cartes jouées dans l'historique de la manche
+        centerCardsHistory.push({ 
+            userCard: userCard, 
+            botCard: botCard,
+            winner: winner,
+            winningCard: winningCard,
+            isLastPli: currentPlisCount === PLIS_PER_MANCHE - 1 // Marqueur pour le dernier pli
+        });
+        
+        document.getElementById('game-status').textContent = trickMessage;
+        
+        setTimeout(() => {
+            endTrick(winner);
+        }, 1500);
+    }
+
+
+
+
+    function endTrick(winner) {
+        
+        userPlayedCard = null;
+        botPlayedCard = null; 
+        suitDemanded = null;
+        
+        currentPlisCount++; 
+        
+        // Le VAINQUEUR du pli devient l'ATTAQUANT du prochain pli
+        currentPlayer = winner;
+        attacker = winner; 
+        
+        
+        if (currentPlisCount >= PLIS_PER_MANCHE) {
+            endManche();
+        } else {
+            document.getElementById('game-status').textContent += `\nC'est à ${winner === 'user' ? userInfo.name : botInfo.name} d'attaquer le pli #${currentPlisCount + 1}.`;
+            renderPlayerSlots(); 
+            // Le vainqueur (le nouvel attaquant) joue
+            if (currentPlayer === 'bot') {
+                setTimeout(botTurn, 1000);
+            }
+        }
+    }
+
+
+
+
+    // --- SCORING LOGIC (MODIFIÉE V102) ---
+    
+    function calculateSipaMancheScore(mancheWinner, winningPliData) {
+        let score = 0;
+        const winnerName = (mancheWinner === 'user' ? userInfo.name : botInfo.name);
+        
+        // La carte gagnante du dernier pli
+        const winningCard = winningPliData.winningCard; 
+        // L'autre carte dans ce pli (pour le bonus Double 7)
+        const losingCard = (mancheWinner === 'user' ? winningPliData.botCard : winningPliData.userCard);
+
+
+        const finalScoreMessage = [];
+        
+        // 1. Base : 1 point pour avoir gagné le dernier pli (Pli #5)
+        score += 1;
+        finalScoreMessage.push(`+1 point de base pour avoir remporté le dernier pli.`);
+        
+        const initialHand = mancheWinner === 'user' ? initialUserHand : initialBotHand;
+        
+        // Vérification des 7 : le 7 doit être utilisé pour gagner le pli, ou capturé
+        let sevensCaptured = [];
+        if (winningCard.rank === '7') sevensCaptured.push(winningCard);
+        if (losingCard.rank === '7') sevensCaptured.push(losingCard);
+        
+        if (sevensCaptured.length > 0) {
+             
+             if (sevensCaptured.length >= 2) {
+                  score = 4; 
+                  finalScoreMessage.push(`+3 points de Bonus Spécial (Total: 4 points) : Capture de deux '7' ou plus dans ce dernier pli.`);
+                  
+             } else { 
+                  
+                  const capturedSeven = sevensCaptured[0]; // Le seul 7
+                  // Trouver le '7' dans la main initiale pour vérifier s'il était seul de sa couleur
+                  const sevenInInitialHand = initialHand.find(c => c.rank === '7' && c.suit === capturedSeven.suit);
+                  const allCardsOfSuit = initialHand.filter(c => c.suit === capturedSeven.suit);
+                  
+                  // Check for "7 sans P" (unique 7 of its suit in the initial hand)
+                  const isSevenSansP = sevenInInitialHand && allCardsOfSuit.length === 1;
+                  
+                  if (isSevenSansP) {
+                       score = 3; 
+                       finalScoreMessage.push(`+2 points de Bonus Spécial (Total: 3 points) : Le '7' était un '7 sans P' (unique de sa couleur en main initiale).`);
+                  } else {
+                       score = 2; 
+                       finalScoreMessage.push(`+1 point de Bonus Simple (Total: 2 points) : Capture d'un '7' dans le dernier pli.`);
+                  }
+             }
+        }
+        
+        return { score: score, message: finalScoreMessage };
+    }
+    
+    function endManche() {
+         
+         const lastPli = centerCardsHistory[PLIS_PER_MANCHE - 1]; 
+         let mancheWinner = lastPli ? lastPli.winner : (lastMancheWinner === 'user' ? 'bot' : 'user'); 
+         const mancheLoser = (mancheWinner === 'user' ? 'bot' : 'user');
+
+
+         let finalScoreStatus = `Manche terminée. Le point est attribué au gagnant du DERNIER PLI.`;
+
+
+         const winnerScoreResult = calculateSipaMancheScore(mancheWinner, lastPli);
+         
+         const finalMancheScore = { user: 0, bot: 0 };
+         finalMancheScore[mancheWinner] = winnerScoreResult.score;
+
+
+         userTotalScore += finalMancheScore.user;
+         botTotalScore += finalMancheScore.bot;
+         
+         // V104: Mise à jour dynamique du niveau de difficulté de l'IA (5 niveaux)
+         if (mancheWinner === 'user' && botDifficultyLevel < 4) {
+             botDifficultyLevel++;
+             finalScoreStatus += `\n\nALERTE NEXUS : L'IA monte en niveau ! Nouvelle difficulté : ${DIFFICULTY_NAMES[botDifficultyLevel]}.`;
+         } else if (mancheWinner === 'bot' && botTotalScore - userTotalScore > 7 && botDifficultyLevel > 0) {
+              // Rétrogradation si le bot gagne trop facilement (marge de 7 points)
+             botDifficultyLevel--; 
+             finalScoreStatus += `\n\nL'IA se relâche (Difficulté ajustée: ${DIFFICULTY_NAMES[botDifficultyLevel]}).`;
+         }
+         
+         // Nettoyage visuel du plateau
+         userTrickHistory = []; 
+         botTrickHistory = [];
+         
+         
+         finalScoreStatus += `\n\nScore de manche - ${mancheWinner === 'user' ? userInfo.name : botInfo.name} marque ${winnerScoreResult.score} point(s) :`;
+         finalScoreStatus += `\n- ` + winnerScoreResult.message.join('\n- ');
+
+
+         document.getElementById('game-status').textContent = finalScoreStatus;
+         
+         renderPlayerSlots();
+         
+         if (userTotalScore >= MAX_SCORE) {
+             showVictoryMessage('user');
+         } else if (botTotalScore >= MAX_SCORE) {
+             showVictoryMessage('bot');
+         } else {
+             document.getElementById('game-status').textContent += `\n\nScore Total: ${userTotalScore} (Vous) - ${botTotalScore} (${botInfo.name}). Nouvelle distribution...`;
+             centerCardsHistory = []; 
+             lastMancheWinner = mancheLoser; // Le perdant de la manche attaque la suivante (Règle SIPA)
+             setTimeout(resetManche, 3000); 
+         }
+    }
+    
+    function resetManche() {
+         manchesPlayed++;
+         // Le perdant de la manche attaque la nouvelle
+         distributeAndStart(lastMancheWinner); 
+    }
+    
+    function togglePause(forcePause = null) {
+        
+        const newPauseState = forcePause !== null ? forcePause : !isPaused;
+        
+        if (newPauseState === isPaused) return; 
+
+
+        isPaused = newPauseState;
+        const pauseBtn = document.getElementById('pause-button');
+        const gameStatusEl = document.getElementById('game-status');
+        
+        if (isPaused) {
+            // PAUSE
+            pauseBtn.textContent = 'Reprendre ▶️'; 
+            pauseBtn.style.backgroundColor = '#ffc107';
+            stopTimer(); 
+            gameStatusEl.textContent = "Jeu en PAUSE. Cliquez sur Reprendre pour continuer.";
+            
+            // Désactiver les clics sur les cartes
+            document.querySelectorAll('#user-card-display .card').forEach(card => {
+                card.removeEventListener('click', handleCardSelection);
+            });
+            document.getElementById('play-confirmation').style.visibility = 'hidden';
+
+
+        } else {
+            // REPRENDRE
+            pauseBtn.textContent = 'Pause ⏸️'; 
+            pauseBtn.style.backgroundColor = '#6c757d';
+            startTimer(); 
+            
+            if (currentPlayer === 'bot') {
+                 gameStatusEl.textContent = `${botInfo.name} réfléchit... (Tour du Bot)`;
+                 setTimeout(botTurn, 1000);
+            } else {
+                 gameStatusEl.textContent = `Jeu repris. C'est à vous de jouer, ${userInfo.name} !`;
+            }
+             
+            // Réactiver les clics sur les cartes
+            document.querySelectorAll('#user-card-display .card').forEach(card => {
+                card.addEventListener('click', handleCardSelection);
+            });
+            
+            if (currentPlayer === 'user' && selectedUserCard) {
+                 const cardEl = document.querySelector(`#user-card-display .card[data-id="${selectedUserCard.id}"]`);
+                 if (cardEl) {
+                     cardEl.classList.add('selected');
+                     document.getElementById('play-confirmation').style.visibility = 'visible';
+                 }
+            }
+        }
+        renderPlayerSlots();
+    }
+
+
+
+
+    // --- FONCTIONNALITÉS SPIRITUELLES/PARTAGE ---
+    
+    function getSpiritualMessage(day) {
+        day = parseInt(day, 10);
+        if (isNaN(day) || day < 1 || day > 31) {
+             day = 1; 
+        }
+        return SPIRITUAL_MESSAGES[day - 1];
+    }
+    
+    function generateShareText(score) {
+         const time = document.getElementById('timer-display').textContent.replace('Temps: ', '');
+         const message = getSpiritualMessage(userInfo.birthDay);
+         
+         const scoreText = `Score Final: ${userTotalScore} (MOI) - ${botTotalScore} (${botInfo.name}).`;
+         
+         return `🤯 J'AI VAINCU l'IA diabolique de SIPA (Niveau ${DIFFICULTY_NAMES[botDifficultyLevel]}) ! 🤯 ${scoreText} Temps: ${time}. ${message} \n\nVenez jouer à ce jeu de cartes immersif et métaphysique sur le blog du ${userInfo.name} (WINSALAS JAJ Nexus) ! \n\n#SIPA #Nexus #WINSALASJAJNexus #JeuDeCartes #Vitalité`;
+    }
+    
+    function handleShare(platform) {
+         const shareText = generateShareText();
+         const gameUrl = window.location.href; // URL de la page actuelle du blog
+         
+         let url = '';
+         
+         if (platform === 'x') {
+             url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(gameUrl)}`;
+         } else if (platform === 'facebook') {
+             // Facebook utilise l'URL à partager
+             url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(gameUrl)}&quote=${encodeURIComponent(shareText)}`;
+         } else if (platform === 'copy') {
+             // Copie du texte et du lien
+             const fullCopyText = `${shareText} \nLien du jeu : ${gameUrl}`;
+             navigator.clipboard.writeText(fullCopyText).then(() => {
+                 alert("Lien et message de victoire copiés dans le presse-papiers ! Collez-le où vous voulez.");
+             }).catch(err => {
+                 console.error('Erreur lors de la copie: ', err);
+                 alert(`Impossible de copier. Veuillez copier manuellement:\n\n${fullCopyText}`);
+             });
+             return; // Pas besoin d'ouvrir une nouvelle fenêtre/onglet
+         }
+         
+         window.open(url, '_blank', 'width=600,height=400');
+    }
+
+
+    function showVictoryMessage(winner) {
+         stopTimer();
+         const endMessageEl = document.getElementById('end-message');
+         
+         if (winner === 'user') {
+             const message = getSpiritualMessage(userInfo.birthDay);
+             endMessageEl.innerHTML = `
+                 <h3 style="font-size: 1.5em;">🎉 VICTOIRE ! LA MATRICE VOUS RÉCOMPENSE ! 🎉</h3>
+                 <p>Félicitations, ${userInfo.name} (${userInfo.flag}), vous avez atteint le score de ${MAX_SCORE} points !</p>
+                 <p style="font-size: 1.1em; margin-top: 10px;">Score Final: ${userTotalScore} (VOUS) - ${botTotalScore} (${botInfo.name}).</p>
+                 <p style="font-size: 0.9em; margin-top: 5px; margin-bottom: 15px;">Temps de jeu: ${document.getElementById('timer-display').textContent.replace('Temps: ', '')}</p>
+                 
+                 <div style="padding: 10px; background-color: #fceceb; border-radius: 6px; border: 2px solid #D70000; color: #333; font-weight: bold; margin-bottom: 15px;">
+                     Message Astral pour votre Jour ${userInfo.birthDay} :<br>
+                     <em style="color: #6a0505;">${message}</em>
+                 </div>
+                 
+                 <div id="share-options-container">
+                     <button id="share-x" class="share-button">Partager sur X 🐦</button>
+                     <button id="share-facebook" class="share-button">Partager sur FB 📘</button>
+                     <button id="copy-link" class="share-button">Copier Lien 🔗</button>
+                 </div>
+                 
+                 <button class="replay-button" onclick="window.location.reload()">Rejouer une Partie</button>
+             `;
+             
+             document.getElementById('share-x').addEventListener('click', () => handleShare('x'));
+             document.getElementById('share-facebook').addEventListener('click', () => handleShare('facebook'));
+             document.getElementById('copy-link').addEventListener('click', () => handleShare('copy'));
+
+
+         } else {
+             endMessageEl.innerHTML = `
+                 <h3 style="font-size: 1.5em;">😢 DÉFAITE 😢</h3>
+                 <p>L'IA ${botInfo.name} (${botInfo.flag}) a atteint le score de ${MAX_SCORE} points en premier.</p>
+                 <p style="font-size: 1.1em; margin-top: 10px;">Score Final: ${userTotalScore} - ${botTotalScore} (${botInfo.name}).</p>
+                 <button class="replay-button" onclick="window.location.reload()">Réessayer (Rejouer)</button>
+             `;
+         }
+         
+         document.getElementById('main-game-area').style.display = 'none';
+         endMessageEl.style.display = 'block';
+    }
+
+
+
+
+    // --- GESTION MODALES ---
+    
+    function openRulesModal() {
+        const modal = document.getElementById('rules-modal');
+        if (modal) {
+            modal.style.display = 'flex';
+        }
+    }
+    
+    function closeRulesModal() {
+        const modal = document.getElementById('rules-modal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+    }
+    
+    // --- INITIALISATION FINALE ---
+    
+    function populateCountrySelect() {
+        const selectEl = document.getElementById('user-country-flag');
+        if (selectEl) {
+            ALL_COUNTRIES.forEach(country => {
+                const option = document.createElement('option');
+                option.value = country.code;
+                option.textContent = `${country.flag} ${country.name}`;
+                selectEl.appendChild(option);
+            });
+        }
+    }
+
+
+    function initializeGame() {
+        let pseudo = document.getElementById('user-pseudo').value.trim();
+        const nameErrorEl = document.getElementById('name-error');
+        
+        if (pseudo === "") {
+             nameErrorEl.textContent = "Veuillez entrer votre nom légal pour commencer le jeu.";
+             return;
+        } else {
+             nameErrorEl.textContent = "";
+        }
+        
+        const rulesBtn = document.getElementById('rules-button');
+        const startBtn = document.getElementById('start-game-button');
+        if (rulesBtn) rulesBtn.disabled = true;
+        if (startBtn) startBtn.disabled = true;
+        
+        FULL_DECK = createFullDeck();
+        currentDeck = shuffleDeck(FULL_DECK);
+        manchesPlayed = 0; 
+        userTotalScore = 0;
+        botTotalScore = 0;
+        botDifficultyLevel = 0; // Réinitialisation de la difficulté au démarrage
+        
+        botInfo = BOT_DATA[Math.floor(Math.random() * BOT_DATA.length)];
+        
+        userInfo.name = pseudo;
+        
+        const selectedFlag = document.getElementById('user-country-flag').value;
+        if (selectedFlag) {
+             const country = ALL_COUNTRIES.find(c => c.code === selectedFlag);
+             if (country) userInfo.flag = country.flag;
+        } else {
+             userInfo.flag = '🌍'; 
+        }
+        
+        const birthDayInput = document.getElementById('user-birth-day').value;
+        let day = parseInt(birthDayInput, 10);
+        userInfo.birthDay = (day >= 1 && day <= 31) ? day : 1; 
+        
+        document.getElementById('start-screen').style.display = 'none';
+        document.getElementById('main-game-area').style.display = 'block';
+        document.getElementById('end-message').style.display = 'none';
+        
+        // L'utilisateur commence la toute première manche
+        distributeAndStart('user'); 
+        startTimer(); 
+        
+        const pauseBtn = document.getElementById('pause-button');
+        if (pauseBtn) pauseBtn.disabled = false;
+        
+        document.querySelectorAll('#user-card-display .card').forEach(card => {
+             card.addEventListener('click', handleCardSelection);
+        });
+    }
+
+
+    // Fonction d'initialisation principale
+    function mainInit() {
+         populateCountrySelect();
+         
+         const rulesBtn = document.getElementById('rules-button');
+         const startBtn = document.getElementById('start-game-button');
+         const closeSpan = document.getElementById('close-rules-span');
+         const closeBtn = document.getElementById('close-rules-button');
+         const pauseBtn = document.getElementById('pause-button');
+         const confirmPlayBtn = document.getElementById('confirm-play-button');
+         
+         if (pauseBtn) pauseBtn.disabled = true; 
+         
+         if (rulesBtn) rulesBtn.addEventListener('click', openRulesModal);
+         if (startBtn) startBtn.addEventListener('click', initializeGame); 
+         if (closeSpan) closeSpan.addEventListener('click', closeRulesModal);
+         if (closeBtn) closeBtn.addEventListener('click', closeRulesModal);
+         
+         if (pauseBtn) pauseBtn.addEventListener('click', togglePause);
+         if (confirmPlayBtn) confirmPlayBtn.addEventListener('click', handleConfirmPlay);
+         
+         document.getElementById('start-screen').style.display = 'block';
+         document.getElementById('main-game-area').style.display = 'none';
+         document.getElementById('end-message').style.display = 'none';
+         document.getElementById('rules-modal').style.display = 'none'; 
+         
+         window.replayGame = () => {
+             window.location.reload();
+         };
+    }
+
+
+    // ⭐ ENVELOPPEMENT DE SÉCURITÉ AMÉLIORÉ (V103) ⭐
+    // Utilise DOMContentLoaded pour garantir que tous les éléments existent avant d'ajouter des écouteurs.
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof mainInit === 'function') {
+            mainInit();
+        } else {
+            // Fallback robuste
+            setTimeout(mainInit, 100); 
+        }
+    });
+</script>
